@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spotify → YouTube Music Migrator</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="header">
+      <h1 class="logo">
+        <span class="logo-icon">🎵</span>
+        Playlist Migrator
+      </h1>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav class="tab-navigation">
+      <button class="tab-btn active" data-tab="export">
+        <svg class="tab-icon" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+        </svg>
+        <span>Export</span>
+      </button>
+      <button class="tab-btn" data-tab="import">
+        <svg class="tab-icon" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M10 16.5l6-4.5-6-4.5v9zM12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/>
+        </svg>
+        <span>Import</span>
+      </button>
+    </nav>
+
+    <!-- Export Tab -->
+    <div class="tab-content active" id="export-tab">
+      <div class="export-section">
+        <div class="status-card">
+          <div class="status-header">
+            <h2>Spotify Playlist Export</h2>
+            <span class="status-badge" id="spotify-status">Waiting...</span>
+          </div>
+          
+          <div class="playlist-info" id="playlist-info">
+            <div class="info-row">
+              <span class="label">Playlist:</span>
+              <span class="value" id="playlist-name">-</span>
+            </div>
+            <div class="info-row">
+              <span class="label">Songs Found:</span>
+              <span class="value" id="songs-count">-</span>
+            </div>
+          </div>
+
+          <div class="progress-container" id="export-progress-container" style="display: none;">
+            <div class="progress-bar">
+              <div class="progress-fill" id="export-progress"></div>
+            </div>
+            <span class="progress-text" id="export-progress-text">Loading songs...</span>
+          </div>
+
+          <div class="action-buttons">
+            <button class="btn btn-primary btn-spotify" id="start-export-btn">
+              <svg viewBox="0 0 24 24" fill="currentColor" class="btn-icon">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+              </svg>
+              Start Export
+            </button>
+            <button class="btn btn-secondary" id="download-csv-btn" disabled>
+              <svg viewBox="0 0 24 24" fill="currentColor" class="btn-icon">
+                <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
+              </svg>
+              Download CSV
+            </button>
+          </div>
+        </div>
+
+        <div class="exported-songs-preview" id="songs-preview" style="display: none;">
+          <h3>Songs Preview</h3>
+          <div class="songs-list" id="songs-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Import Tab -->
+    <div class="tab-content" id="import-tab">
+      <div class="import-section">
+        <!-- CSV Upload -->
+        <div class="upload-area" id="upload-area">
+          <input type="file" id="csv-input" accept=".csv" hidden>
+          <div class="upload-content">
+            <svg viewBox="0 0 24 24" fill="currentColor" class="upload-icon">
+              <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/>
+            </svg>
+            <p class="upload-text">Drag & drop your CSV file here</p>
+            <p class="upload-subtext">or click to browse</p>
+            <p class="upload-format">Format: spotify_playlist_*.csv</p>
+          </div>
+        </div>
+
+        <!-- CSV Preview -->
+        <div class="csv-preview" id="csv-preview" style="display: none;">
+          <div class="preview-header">
+            <h3>CSV Preview</h3>
+            <button class="btn btn-small btn-danger" id="clear-csv-btn">Clear</button>
+          </div>
+          <div class="preview-stats">
+            <div class="stat-item">
+              <span class="stat-value" id="total-songs">0</span>
+              <span class="stat-label">Total Songs</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-value" id="valid-songs">0</span>
+              <span class="stat-label">Valid</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-value" id="invalid-songs">0</span>
+              <span class="stat-label">Invalid</span>
+            </div>
+          </div>
+          <div class="table-container">
+            <table class="preview-table">
+              <thead>
+                <tr>
+                  <th>Song Name</th>
+                  <th>Artist</th>
+                  <th>Album</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="preview-table-body"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Import Configuration -->
+        <div class="import-config" id="import-config" style="display: none;">
+          <div class="form-group">
+            <label for="playlist-name-input">Target Playlist Name</label>
+            <input 
+              type="text" 
+              id="playlist-name-input" 
+              placeholder="Enter playlist name to search on YouTube Music"
+              autocomplete="off"
+            >
+          </div>
+          <button class="btn btn-primary btn-youtube" id="start-import-btn">
+            <svg viewBox="0 0 24 24" fill="currentColor" class="btn-icon">
+              <path d="M10 16.5l6-4.5-6-4.5v9zM12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/>
+            </svg>
+            Start Importing
+          </button>
+        </div>
+
+        <!-- Import Progress -->
+        <div class="import-progress" id="import-progress" style="display: none;">
+          <div class="progress-header">
+            <h3>Import Progress</h3>
+            <button class="btn btn-small btn-danger" id="cancel-import-btn">Cancel</button>
+          </div>
+          
+          <div class="progress-stats">
+            <div class="progress-stat">
+              <span class="progress-stat-value" id="import-completed">0</span>
+              <span class="progress-stat-label">Completed</span>
+            </div>
+            <div class="progress-stat">
+              <span class="progress-stat-value" id="import-failed">0</span>
+              <span class="progress-stat-label">Failed</span>
+            </div>
+            <div class="progress-stat">
+              <span class="progress-stat-value" id="import-remaining">0</span>
+              <span class="progress-stat-label">Remaining</span>
+            </div>
+            <div class="progress-stat">
+              <span class="progress-stat-value" id="import-eta">--:--</span>
+              <span class="progress-stat-label">ETA</span>
+            </div>
+          </div>
+
+          <div class="progress-bar-container">
+            <div class="progress-bar">
+              <div class="progress-fill import-progress-fill" id="import-progress-bar"></div>
+            </div>
+            <span class="progress-percentage" id="import-percentage">0%</span>
+          </div>
+
+          <div class="current-song" id="current-song">
+            <span class="current-song-label">Now importing:</span>
+            <span class="current-song-title" id="current-song-title">-</span>
+          </div>
+
+          <div class="logs-container">
+            <div class="logs-header">
+              <span>Import Logs</span>
+              <button class="btn btn-small btn-ghost" id="clear-logs-btn">Clear</button>
+            </div>
+            <div class="logs-content" id="logs-content"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toast-container"></div>
+  </div>
+
+  <script src="utils/helpers.js"></script>
+  <script src="utils/csv-parser.js"></script>
+  <script src="components/toast.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>
