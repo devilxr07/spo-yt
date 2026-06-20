@@ -131,38 +131,49 @@
     let maxScrolls = 50; // Prevent infinite scrolling
     let scrolls = 0;
     let noChangeCount = 0;
+    let lastSongCount = 0;
+    let stableCount = 0;
 
     while (scrolls < maxScrolls && noChangeCount < 3) {
-      // Report progress
       const currentSongs = getAllSongElements().length;
-      chrome.runtime.sendMessage({
-        action: 'exportProgress',
-        progress: currentSongs,
-        total: currentSongs, // We don't know total yet
-        message: `Loading songs... ${currentSongs} found`
-      });
+      
+      // Report progress only if count changed (reduces message overhead)
+      if (currentSongs !== lastSongCount) {
+        chrome.runtime.sendMessage({
+          action: 'exportProgress',
+          progress: currentSongs,
+          total: currentSongs,
+          message: `Loading songs... ${currentSongs} found`
+        });
+        lastSongCount = currentSongs;
+        stableCount = 0;
+      } else {
+        stableCount++;
+        // If count stable for 3 consecutive scrolls, we're done
+        if (stableCount >= 3) break;
+      }
 
       // Scroll down
       scrollContainer.scrollTop = scrollContainer.scrollHeight;
-      previousHeight = scrollContainer.scrollHeight;
-
-      // Wait for content to load
-      await sleep(500);
+      const newHeight = scrollContainer.scrollHeight;
 
       // Check if more content loaded
-      const newHeight = scrollContainer.scrollHeight;
       if (newHeight === previousHeight) {
         noChangeCount++;
       } else {
         noChangeCount = 0;
       }
-
+      
+      previousHeight = newHeight;
       scrolls++;
+
+      // Adaptive wait: shorter if still loading, longer if near end
+      await sleep(currentSongs > 0 ? 300 : 500);
     }
 
     // Final scroll to top
     scrollContainer.scrollTop = 0;
-    await sleep(300);
+    await sleep(200);
   }
 
   /**
@@ -174,23 +185,32 @@
 
     console.log(`[Spotify Migrator] Found ${total} song elements`);
 
-    for (let i = 0; i < songElements.length; i++) {
-      const songElement = songElements[i];
-      const songData = extractSongData(songElement, i);
+    // Batch processing for better performance
+    const batchSize = 50;
+    for (let i = 0; i < songElements.length; i += batchSize) {
+      const batch = songElements.slice(i, i + batchSize);
+      
+      for (let j = 0; j < batch.length; j++) {
+        const songElement = batch[j];
+        const songData = extractSongData(songElement, i + j);
 
-      if (songData && !isDuplicate(songData)) {
-        extractedSongs.push(songData);
-        markAsSeen(songData);
-
-        // Report progress every 10 songs
-        if ((i + 1) % 10 === 0 || i === songElements.length - 1) {
-          chrome.runtime.sendMessage({
-            action: 'exportProgress',
-            progress: extractedSongs.length,
-            total: total,
-            message: `Extracted ${extractedSongs.length}/${total} songs`
-          });
+        if (songData && !isDuplicate(songData)) {
+          extractedSongs.push(songData);
+          markAsSeen(songData);
         }
+      }
+
+      // Report progress after each batch
+      chrome.runtime.sendMessage({
+        action: 'exportProgress',
+        progress: extractedSongs.length,
+        total: total,
+        message: `Extracted ${extractedSongs.length}/${total} songs`
+      });
+      
+      // Small delay between batches to prevent UI blocking
+      if (i + batchSize < songElements.length) {
+        await sleep(10);
       }
     }
 
@@ -212,11 +232,11 @@
 
     let elements = [];
     for (const selector of selectors) {
-      elements = document.querySelectorAll(selector);
+      elements = Array.from(document.querySelectorAll(selector));
       if (elements.length > 0) break;
     }
 
-    return Array.from(elements);
+    return elements;
   }
 
   /**
@@ -227,6 +247,10 @@
    */
   function extractSongData(element, index) {
     try {
+      // Get track ID for better identification
+      const trackId = element.getAttribute('data-track-id') || 
+                     element.getAttribute('data-context-id');
+
       // Try different selectors for song title
       const titleSelectors = [
         '[data-testid="cell-title"] a',
@@ -287,7 +311,8 @@
         artist,
         album,
         duration,
-        index: extractedSongs.length
+        index: extractedSongs.length,
+        trackId: trackId || undefined
       };
 
     } catch (error) {
@@ -302,6 +327,10 @@
    * @returns {boolean}
    */
   function isDuplicate(song) {
+    // Use trackId if available for more accurate duplicate detection
+    if (song.trackId) {
+      return seenSongs.has(song.trackId);
+    }
     const key = `${song.name.toLowerCase()}|${song.artist.toLowerCase()}`;
     return seenSongs.has(key);
   }
@@ -311,8 +340,13 @@
    * @param {Object} song 
    */
   function markAsSeen(song) {
-    const key = `${song.name.toLowerCase()}|${song.artist.toLowerCase()}`;
-    seenSongs.add(key);
+    // Use trackId if available for more accurate duplicate detection
+    if (song.trackId) {
+      seenSongs.add(song.trackId);
+    } else {
+      const key = `${song.name.toLowerCase()}|${song.artist.toLowerCase()}`;
+      seenSongs.add(key);
+    }
   }
 
   /**
