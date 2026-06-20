@@ -1,0 +1,92 @@
+```
+# Build artifacts
+dist/
+build/
+*.js.map
+
+# Dependencies
+node_modules/
+
+# Logs and temp files
+*.log
+*.tmp
+
+# Environment
+.env
+.env.local
+*.env.*
+
+# Editors
+.vscode/
+.idea/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Coverage reports
+coverage/
+htmlcov/
+*.coverage
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+pip-log.txt
+pip-selfcheck.json
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.log
+.git/
+
+# Node.js
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+node_modules/
+jspm_packages/
+typings/
+.nyc_output
+coverage/
+*.lcov
+.nyc_output/
+.npm
+.node_repl_history
+.lock-wscript
+.wafpickle-N
+lib-cov/
+.scoverage/
+.scala_dependencies
+scalac-dependencies.xml
+fpc-pascal/
+*.o.js
+*.c.js
+*.map
+*.tsbuildinfo
+.next/
+out/
+dist/
+build/
+.nuxt/
+public/
+.next
+coverage/
+*.lcov
+*.log
+*.tmp
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+```
