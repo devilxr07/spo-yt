@@ -197,5 +197,16 @@ window.showInfoToast = (title, message, duration) => {
   return window.toastManager.info(title, message, duration);
 };
 
+/**
+ * Unified toast notification function for module imports
+ * @param {string} type - 'success', 'error', 'warning', 'info'
+ * @param {string} title 
+ * @param {string} message 
+ * @param {number} duration 
+ */
+export function showToastNotification(type, title, message, duration) {
+  return window.toastManager.show(type, title, message, duration);
+}
+
 // Export for module usage
 export { ToastManager };

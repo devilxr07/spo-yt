@@ -3,6 +3,9 @@
  * Handles UI interactions for Export and Import tabs
  */
 
+// Import utilities
+import { showToastNotification } from './components/toast.js';
+
 // State management
 const state = {
   currentTab: 'export',
@@ -674,7 +677,13 @@ function showWarningToast(title, message) {
  * @param {string} message 
  */
 function showNotification(type, title, message) {
-  // Create toast element if it doesn't exist
+  // Use the imported toast function if available
+  if (typeof showToastNotification === 'function') {
+    showToastNotification(type, title, message);
+    return;
+  }
+  
+  // Fallback: Create toast element if it doesn't exist
   let toast = document.getElementById('toast-notification');
   if (!toast) {
     toast = document.createElement('div');
