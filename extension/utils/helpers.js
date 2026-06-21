@@ -355,3 +355,25 @@ window.helpers = {
   debugLog,
   storage
 };
+
+// Export for module usage
+export {
+  sleep,
+  generateId,
+  formatDuration,
+  sanitizeFilename,
+  escapeCSVField,
+  calculateETA,
+  isSpotifyPlaylist,
+  extractSpotifyPlaylistId,
+  debounce,
+  throttle,
+  retryWithBackoff,
+  delay,
+  isElementVisible,
+  getSafeTextContent,
+  parseTimeToSeconds,
+  stringSimilarity,
+  debugLog,
+  storage
+};
