@@ -254,3 +254,13 @@ window.CSVParser = {
   readCSVFile,
   getCSVColumns
 };
+
+// Export for module usage
+export {
+  parseCSV,
+  validateCSV,
+  generateCSV,
+  downloadCSV,
+  readCSVFile,
+  getCSVColumns
+};
