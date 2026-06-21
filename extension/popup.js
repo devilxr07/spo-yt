@@ -630,3 +630,81 @@ function escapeHtml(text) {
   div.textContent = text;
   return div.innerHTML;
 }
+
+/**
+ * Show error toast notification
+ * @param {string} title 
+ * @param {string} message 
+ */
+function showErrorToast(title, message) {
+  showNotification('error', title, message);
+}
+
+/**
+ * Show success toast notification
+ * @param {string} title 
+ * @param {string} message 
+ */
+function showSuccessToast(title, message) {
+  showNotification('success', title, message);
+}
+
+/**
+ * Show info toast notification
+ * @param {string} title 
+ * @param {string} message 
+ */
+function showInfoToast(title, message) {
+  showNotification('info', title, message);
+}
+
+/**
+ * Show warning toast notification
+ * @param {string} title 
+ * @param {string} message 
+ */
+function showWarningToast(title, message) {
+  showNotification('warning', title, message);
+}
+
+/**
+ * Show toast notification
+ * @param {string} type - 'error', 'success', 'info', 'warning'
+ * @param {string} title 
+ * @param {string} message 
+ */
+function showNotification(type, title, message) {
+  // Create toast element if it doesn't exist
+  let toast = document.getElementById('toast-notification');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'toast-notification';
+    toast.className = 'toast-notification';
+    document.body.appendChild(toast);
+  }
+  
+  // Set toast content and style
+  const iconMap = {
+    error: '❌',
+    success: '✅',
+    info: 'ℹ️',
+    warning: '⚠️'
+  };
+  
+  toast.className = `toast-notification ${type}`;
+  toast.innerHTML = `
+    <div class="toast-icon">${iconMap[type] || 'ℹ️'}</div>
+    <div class="toast-content">
+      <div class="toast-title">${escapeHtml(title)}</div>
+      <div class="toast-message">${escapeHtml(message)}</div>
+    </div>
+  `;
+  
+  // Show toast
+  toast.classList.add('show');
+  
+  // Auto-hide after 5 seconds
+  setTimeout(() => {
+    toast.classList.remove('show');
+  }, 5000);
+}
